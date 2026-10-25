@@ -34,3 +34,4 @@ loop-audit.jsonl
 loop-report.json
 loop-report.md
 .pytest_cache/
+wonderlust/
