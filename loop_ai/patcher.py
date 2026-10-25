@@ -111,6 +111,8 @@ class PatchApplier:
                 cwd=self.repo_root,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=10,
             )
             if res.returncode == 0:
@@ -130,12 +132,12 @@ class PatchApplier:
         try:
             author_name = (
                 author_name
-                or subprocess.run(["git", "config", "user.name"], cwd=self.repo_root, capture_output=True, text=True).stdout.strip()
+                or subprocess.run(["git", "config", "user.name"], cwd=self.repo_root, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout.strip()
                 or "Umang Jadav"
             )
             author_email = (
                 author_email
-                or subprocess.run(["git", "config", "user.email"], cwd=self.repo_root, capture_output=True, text=True).stdout.strip()
+                or subprocess.run(["git", "config", "user.email"], cwd=self.repo_root, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout.strip()
                 or "jadavumang160@gmail.com"
             )
 
@@ -147,6 +149,8 @@ class PatchApplier:
                 cwd=self.repo_root,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             if commit_res.returncode == 0:
                 commit_info = subprocess.run(
@@ -154,6 +158,8 @@ class PatchApplier:
                     cwd=self.repo_root,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                 ).stdout.strip()
                 return commit_info
         except Exception:
@@ -163,13 +169,15 @@ class PatchApplier:
     def push_repair(self) -> Optional[str]:
         """Pushes the repair commit to remote GitHub repository if origin is configured."""
         try:
-            remotes = subprocess.run(["git", "remote"], cwd=self.repo_root, capture_output=True, text=True).stdout
+            remotes = subprocess.run(["git", "remote"], cwd=self.repo_root, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
             if "origin" in remotes:
                 res = subprocess.run(
                     ["git", "push", "origin", "HEAD"],
                     cwd=self.repo_root,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     timeout=20,
                 )
                 if res.returncode == 0:
@@ -178,6 +186,8 @@ class PatchApplier:
                         cwd=self.repo_root,
                         capture_output=True,
                         text=True,
+                        encoding="utf-8",
+                        errors="replace",
                     ).stdout.strip()
                     return remote_url
         except Exception:

@@ -116,6 +116,8 @@ class CommandExecutor:
                 cwd=cwd,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=timeout_to_use,
                 shell=False,
                 env=env,
