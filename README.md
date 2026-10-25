@@ -46,19 +46,26 @@ Loop Engineering AI is an autonomous, self-healing code repair engine. It inspec
 
 ## 🚀 Quick Start
 
-### 1. Run the Interactive Demonstrator
+### 1. Credentials Setup (.env)
+Loop Engineering AI uses Google Gemini LLM for open-ended, dynamic repairs across any codebase and language.
+Copy `.env.example` to `.env` and set your key:
+```ini
+GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
+GEMINI_MODEL=gemini-2.5-flash
+```
+*(Alternatively, pass `--api-key YOUR_KEY` via CLI. If unset, it falls back to offline benchmark mode).*
+
+### 2. Run the Interactive Demonstrator
 Runs an isolated, end-to-end repair demonstration in a temporary Git repository:
 ```bash
 python demo_agent.py
 ```
-Or via the module:
-```bash
-python -m loop_ai --demo
-```
+Or double click `run_demo.bat` on Windows.
 
-### 2. Run on Any Local Repository
+### 3. Run on Any Local Repository
+Works across Python, JavaScript, Go, Rust, Java, C++, etc.:
 ```bash
-python -m loop_ai --repo ./path-to-repo --task "Fix calculation error" --test "python -m unittest discover -v" --attempts 3
+python -m loop_ai --repo ./path-to-repo --task "Fix calculation error" --test "pytest tests/ -v" --attempts 3
 ```
 
 ### CLI Arguments
@@ -71,7 +78,20 @@ python -m loop_ai --repo ./path-to-repo --task "Fix calculation error" --test "p
 | `--auto-approve` | `false` | Automatically apply patches without prompting |
 | `--allow-dirty` | `false` | Permit running on uncommitted working trees |
 | `--provider` | `gemini` | Planner provider (`gemini` or `offline`) |
+| `--api-key` | `None` | Google Gemini API key (or set in `.env`) |
+| `--model` | `gemini-2.5-flash` | Gemini model name |
 | `--demo` | `false` | Launch temporary interactive demo repository |
+
+---
+
+## 🔄 3-Stage Decision & Repair Pipeline
+
+1. **🔍 Stage 1: LLM Error Log Analysis & Diagnosis**  
+   Analyzes live test output and tracebacks, isolates the failing component, identifies the error type, and determines the root cause.
+2. **🤖 Stage 2: Coding AI Agent Code Repair**  
+   Formulates minimal, schema-constrained code replacements and displays unified diffs for interactive human approval.
+3. **📊 Stage 3: Coding AI Agent Change & Resolution Summary**  
+   Re-runs test validation atomically. If tests pass, updates repository files, generates `loop-report.md`, and streams audit logs to `loop-audit.jsonl`. If tests fail, automatically rolls back.
 
 ---
 

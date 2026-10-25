@@ -11,11 +11,19 @@ from loop_ai.planner import LLMPlanner, DeterministicDemoPlanner
 from loop_ai.executor import CommandExecutor
 
 
-def run_demo():
+def run_demo(provider: Optional[str] = None, api_key: Optional[str] = None):
     """Runs a self-contained demonstration repository with failing test and automated repair."""
     print("=" * 60)
     print("🚀 Loop Engineering AI - Interactive Demonstrator")
     print("=" * 60)
+
+    use_gemini = (provider == "gemini") or bool(api_key) or bool(os.environ.get("GEMINI_API_KEY"))
+    if use_gemini:
+        planner = LLMPlanner(api_key=api_key)
+        print("🧠 AI Provider: Google Gemini LLM (Dynamic Multimodal Engine)")
+    else:
+        planner = DeterministicDemoPlanner()
+        print("⚡ AI Provider: Deterministic Planner (Offline Benchmark Mode)")
 
     with tempfile.TemporaryDirectory(prefix="loop-demo-") as tmp:
         repo = pathlib.Path(tmp)
@@ -70,7 +78,7 @@ def run_demo():
             max_attempts=3,
             auto_approve=False,
             allow_dirty=False,
-            planner=DeterministicDemoPlanner(),
+            planner=planner,
             on_status=print_status,
         )
 
@@ -132,6 +140,18 @@ def main():
         help="Planner provider (gemini or offline, default: gemini)",
     )
     parser.add_argument(
+        "--api-key",
+        type=str,
+        default=None,
+        help="Google Gemini API key (or set GEMINI_API_KEY environment variable)",
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="gemini-2.5-flash",
+        help="Gemini model to use (default: gemini-2.5-flash)",
+    )
+    parser.add_argument(
         "--demo",
         action="store_true",
         help="Run self-contained offline demo repository and exit",
@@ -140,13 +160,15 @@ def main():
     args = parser.parse_args()
 
     if args.demo:
-        run_demo()
+        run_demo(provider=args.provider, api_key=args.api_key)
         return
 
     repo_path = pathlib.Path(args.repo).resolve()
 
     planner = (
-        LLMPlanner() if args.provider == "gemini" else DeterministicDemoPlanner()
+        LLMPlanner(api_key=args.api_key, model=args.model)
+        if args.provider == "gemini"
+        else DeterministicDemoPlanner()
     )
 
     def print_status(state, msg):

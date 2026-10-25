@@ -155,17 +155,30 @@ class RepairLoopController:
                 f"Proposed patch:\nSummary: {proposal.summary}\nDiff Preview:\n{diff_preview}",
             )
 
+            # Stage 1: LLM Error Log Analysis Display
+            if proposal.error_summary:
+                print("\n" + "=" * 60)
+                print("🔍 [STAGE 1] LLM ERROR LOG ANALYSIS & DIAGNOSIS")
+                print("=" * 60)
+                print(proposal.error_summary.strip())
+                print("=" * 60)
+
+            # Stage 2: Coding AI Agent Patch Display
+            print("\n" + "=" * 60)
+            print(f"🤖 [STAGE 2] CODING AI AGENT - PROPOSED CHANGES (Attempt {attempt}/{self.max_attempts})")
+            print("=" * 60)
+            print(f"Summary: {proposal.summary}")
+            print("-" * 60)
+            print(diff_preview.strip() if diff_preview else "No diff")
+            print("=" * 60)
+
             # Solicit Human Approval
             approved = self.auto_approve
             if not approved:
-                print("\n" + "=" * 50)
-                print(f"[Attempt {attempt}/{self.max_attempts}] Proposed Patch:")
-                print(f"Summary: {proposal.summary}")
-                print("-" * 50)
-                print(diff_preview)
-                print("=" * 50)
                 user_in = input("Apply this patch? [y/N]: ").strip().lower()
                 approved = (user_in == "y")
+            else:
+                print("[Auto-Approve Enabled: Automatically applying patch...]")
 
             if not approved:
                 self.on_status("REJECTED", "Patch rejected by user. Rolling back and terminating.")
@@ -176,6 +189,7 @@ class RepairLoopController:
                         attempt=attempt,
                         state="REJECTED",
                         patch_summary=proposal.summary,
+                        error_summary=proposal.error_summary,
                         diff=diff_preview,
                     )
                 )
@@ -210,12 +224,26 @@ class RepairLoopController:
                 self.on_status("PASSED", "Validation tests PASSED! Repair verified.")
                 final_status = "PASSED"
                 final_diff = current_diff
+
+                # Stage 3: Coding AI Agent Resolution & Change Summary
+                mod_files = ", ".join(c.path for c in proposal.changes) or "repository files"
+                print("\n" + "=" * 60)
+                print("📊 [STAGE 3] CODING AI AGENT - RESOLUTION & CHANGE SUMMARY")
+                print("=" * 60)
+                print(f"• Outcome: ✅ PASSED (Repair Verified)")
+                print(f"• Files Modified: {mod_files}")
+                print(f"• Change Summary: {proposal.summary}")
+                print(f"• Validation Tests: 100% Passing (exit code 0)")
+                print(f"• Comprehensive Report: loop-report.md")
+                print("=" * 60 + "\n")
+
                 self._log_audit(
                     AuditEntry(
                         timestamp=now(),
                         attempt=attempt,
                         state="PASSED",
                         patch_summary=proposal.summary,
+                        error_summary=proposal.error_summary,
                         diff=current_diff,
                         validation_exit=0,
                         test_output=test_res.combined_output,
@@ -232,6 +260,7 @@ class RepairLoopController:
                         attempt=attempt,
                         state="RETRY",
                         patch_summary=proposal.summary,
+                        error_summary=proposal.error_summary,
                         validation_exit=test_res.returncode,
                         test_output=test_res.combined_output,
                     )
@@ -249,6 +278,7 @@ class RepairLoopController:
             validation_exit=final_validation_exit,
             diff=final_diff,
             test_output=last_test_output,
+            error_summary=proposal.error_summary if 'proposal' in locals() else "",
             audit_trail=[a.__dict__ for a in self.audit_trail],
         )
         self._write_reports(report)

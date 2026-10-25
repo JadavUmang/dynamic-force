@@ -23,6 +23,7 @@ MANIFEST
 
 .env
 .env.*
+!.env.example
 .venv
 env/
 venv/
@@ -35,3 +36,4 @@ loop-report.json
 loop-report.md
 .pytest_cache/
 wonderlust/
+demo_project/

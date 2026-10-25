@@ -46,6 +46,11 @@ class DeterministicDemoPlanner(BasePlanner):
             if "def add(" in code and "return a - b" in code:
                 return PatchProposal(
                     summary="Fix addition operator: replace 'return a - b' with 'return a + b'",
+                    error_summary=(
+                        f"• Failed Component: {path} :: add(a, b)\n"
+                        f"• Error Type: AssertionError (Calculation mismatch, e.g. -1 != 5)\n"
+                        f"• Root Cause Diagnosis: Subtraction operator ('return a - b') executed instead of expected addition ('return a + b')."
+                    ),
                     changes=[
                         FileChange(path=path, old="return a - b", new="return a + b")
                     ],
@@ -60,6 +65,11 @@ class DeterministicDemoPlanner(BasePlanner):
                     new_expr = old_expr.replace("<=", "<")
                     return PatchProposal(
                         summary=f"Fix off-by-one indexing error in {path}",
+                        error_summary=(
+                            f"• Failed Component: {path}\n"
+                            f"• Error Type: IndexError (sequence index out of range)\n"
+                            f"• Root Cause Diagnosis: Inclusive comparison '<= len()' accesses one element past array boundary."
+                        ),
                         changes=[FileChange(path=path, old=old_expr, new=new_expr)],
                     )
 
@@ -68,11 +78,21 @@ class DeterministicDemoPlanner(BasePlanner):
             if "return False" in code and "expected True" in test_output.lower():
                 return PatchProposal(
                     summary=f"Invert return value to True in {path}",
+                    error_summary=(
+                        f"• Failed Component: {path}\n"
+                        f"• Error Type: AssertionError (Expected True, received False)\n"
+                        f"• Root Cause Diagnosis: Inverted boolean return statement in conditional logic."
+                    ),
                     changes=[FileChange(path=path, old="return False", new="return True")],
                 )
             if "return True" in code and "expected False" in test_output.lower():
                 return PatchProposal(
                     summary=f"Invert return value to False in {path}",
+                    error_summary=(
+                        f"• Failed Component: {path}\n"
+                        f"• Error Type: AssertionError (Expected False, received True)\n"
+                        f"• Root Cause Diagnosis: Inverted boolean return statement in conditional logic."
+                    ),
                     changes=[FileChange(path=path, old="return True", new="return False")],
                 )
 
@@ -85,6 +105,11 @@ class DeterministicDemoPlanner(BasePlanner):
                 if old_str in code:
                     return PatchProposal(
                         summary=f"Replace '{old_str}' with '{new_str}' in {path}",
+                        error_summary=(
+                            f"• Failed Component: {path}\n"
+                            f"• Error Type: Target string replacement required\n"
+                            f"• Root Cause Diagnosis: Identified target '{old_str}' violating specification."
+                        ),
                         changes=[FileChange(path=path, old=old_str, new=new_str)],
                     )
 
@@ -139,10 +164,14 @@ class LLMPlanner(BasePlanner):
 
         system_instruction = (
             "You are Loop Engineering AI, an autonomous software repair engineer. "
-            "Your job is to repair failing code given a task description, repository context, and test failure output. "
+            "Your job is to:\n"
+            "1. Analyze the test failure output and repository context to provide an 'error_summary' explaining: "
+            "the failed component, error type, and root cause diagnosis.\n"
+            "2. Formulate minimal, safe, exact code changes to repair the defect.\n"
             "Output ONLY valid JSON matching this schema:\n"
             "{\n"
-            '  "summary": "Brief explanation of the repair",\n'
+            '  "error_summary": "Concise 2-3 line summary of: Failed Component, Error Type, and Root Cause",\n'
+            '  "summary": "Brief explanation of the code repair",\n'
             '  "changes": [\n'
             '    {"path": "relative/path/to/file.py", "old": "verbatim text to replace", "new": "replacement text"}\n'
             "  ]\n"
@@ -181,6 +210,10 @@ class LLMPlanner(BasePlanner):
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read().decode("utf-8"))
 
-        raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
+        raw_text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        # Clean markdown code block wraps if present
+        if raw_text.startswith("```"):
+            raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+            raw_text = re.sub(r"\s*```$", "", raw_text)
         parsed = json.loads(raw_text)
         return PatchProposal.from_dict(parsed)
