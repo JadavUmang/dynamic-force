@@ -114,6 +114,30 @@ Verify security boundaries, path traversal prevention, and atomic rollback:
 
 ---
 
+### Option D: Vite.js Web Application Repair Demo (`vite_demo/`)
+Demonstrates fixing modern web apps (HTML5, CSS3, JS, Vite) with `package.json` dependency defects:
+
+1. **Navigate to the directory**:
+   ```powershell
+   cd vite_demo
+   ```
+2. **Inspect the Web App**: Open `vite_demo/index.html` in your browser to view the futuristic NexusAI operations dashboard.
+3. **Open in Editor**: Open `vite_demo/package.json` in your editor (line 12 has `"canvas-confetti": "MISSING"`).
+4. **Run the Repair Agent**:
+   ```powershell
+   python demo_agent.py
+   ```
+   *(Or double-click `vite_demo\run_demo.bat`)*
+5. **Observe Real-Time Repair**:
+   - Stage 1: LLM diagnoses the missing dependency version from `node test.js` output.
+   - Stage 2: Coding AI Agent displays the exact replacement (`"MISSING"` $\rightarrow$ `"^1.9.2"`).
+   - Press **`Enter`** to apply.
+   - Notice `package.json` in your editor tab update live to `"^1.9.2"`!
+   - Stage 3: `node test.js` validation passes 100%, and uncommitted git diff is displayed.
+6. **Reset Anytime**: Double-click `vite_demo\reset_demo.bat` to restore `package.json` back to `"MISSING"`.
+
+---
+
 ## ⚙️ CLI Flags Reference
 
 | Flag | Default | Description |
