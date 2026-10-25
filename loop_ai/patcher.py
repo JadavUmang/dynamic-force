@@ -117,3 +117,67 @@ class PatchApplier:
             pass
 
         return ""
+
+    def commit_repair(
+        self,
+        summary: str,
+        author_name: Optional[str] = None,
+        author_email: Optional[str] = None,
+    ) -> Optional[str]:
+        """Creates an actual Git commit reflecting the validated repair."""
+        try:
+            author_name = (
+                author_name
+                or subprocess.run(["git", "config", "user.name"], cwd=self.repo_root, capture_output=True, text=True).stdout.strip()
+                or "Umang Jadav"
+            )
+            author_email = (
+                author_email
+                or subprocess.run(["git", "config", "user.email"], cwd=self.repo_root, capture_output=True, text=True).stdout.strip()
+                or "jadavumang160@gmail.com"
+            )
+
+            # Stage all changes
+            subprocess.run(["git", "add", "."], cwd=self.repo_root, capture_output=True, check=True)
+            msg = f"fix(repair): {summary}\n\nAutomated code repair verified by Loop Engineering AI."
+            commit_res = subprocess.run(
+                ["git", "-c", f"user.name={author_name}", "-c", f"user.email={author_email}", "commit", "-m", msg],
+                cwd=self.repo_root,
+                capture_output=True,
+                text=True,
+            )
+            if commit_res.returncode == 0:
+                commit_info = subprocess.run(
+                    ["git", "log", "-1", "--oneline"],
+                    cwd=self.repo_root,
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+                return commit_info
+        except Exception:
+            pass
+        return None
+
+    def push_repair(self) -> Optional[str]:
+        """Pushes the repair commit to remote GitHub repository if origin is configured."""
+        try:
+            remotes = subprocess.run(["git", "remote"], cwd=self.repo_root, capture_output=True, text=True).stdout
+            if "origin" in remotes:
+                res = subprocess.run(
+                    ["git", "push", "origin", "HEAD"],
+                    cwd=self.repo_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=20,
+                )
+                if res.returncode == 0:
+                    remote_url = subprocess.run(
+                        ["git", "remote", "get-url", "origin"],
+                        cwd=self.repo_root,
+                        capture_output=True,
+                        text=True,
+                    ).stdout.strip()
+                    return remote_url
+        except Exception:
+            pass
+        return None

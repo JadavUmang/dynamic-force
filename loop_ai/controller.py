@@ -225,6 +225,10 @@ class RepairLoopController:
                 final_status = "PASSED"
                 final_diff = current_diff
 
+                # Commit changes to Git & Push to GitHub if remote exists
+                commit_info = self.patcher.commit_repair(summary=proposal.summary)
+                pushed_url = self.patcher.push_repair()
+
                 # Stage 3: Coding AI Agent Resolution & Change Summary
                 mod_files = ", ".join(c.path for c in proposal.changes) or "repository files"
                 print("\n" + "=" * 60)
@@ -233,6 +237,11 @@ class RepairLoopController:
                 print(f"• Outcome: ✅ PASSED (Repair Verified)")
                 print(f"• Files Modified: {mod_files}")
                 print(f"• Change Summary: {proposal.summary}")
+                if commit_info:
+                    print(f"• Git Commit Created: {commit_info}")
+                    print("• Commit Author: Umang Jadav <jadavumang160@gmail.com>")
+                if pushed_url:
+                    print(f"• GitHub Synchronized: Pushed live to {pushed_url}")
                 print(f"• Validation Tests: 100% Passing (exit code 0)")
                 print(f"• Comprehensive Report: loop-report.md")
                 print("=" * 60 + "\n")
