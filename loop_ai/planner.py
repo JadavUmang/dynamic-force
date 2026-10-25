@@ -113,6 +113,26 @@ class DeterministicDemoPlanner(BasePlanner):
                         changes=[FileChange(path=path, old=old_str, new=new_str)],
                     )
 
+        # Strategy 5: Package.json Dependency Repair (Vite / Node Projects)
+        for path, code in files.items():
+            if path.endswith("package.json"):
+                if '"canvas-confetti": "MISSING"' in code:
+                    return PatchProposal(
+                        summary="Fix missing dependency version: replace 'MISSING' with '^1.9.2' for canvas-confetti in package.json",
+                        error_summary=(
+                            f"• Failed Component: {path} :: dependencies\n"
+                            f"• Error Type: ERR_MODULE_NOT_FOUND (Missing / Invalid Dependency Specification)\n"
+                            f"• Root Cause Diagnosis: 'canvas-confetti' has placeholder version 'MISSING'. Valid version '^1.9.2' is required for Vite build."
+                        ),
+                        changes=[
+                            FileChange(
+                                path=path,
+                                old='"canvas-confetti": "MISSING"',
+                                new='"canvas-confetti": "^1.9.2"',
+                            )
+                        ],
+                    )
+
         # If nothing matched, generate a minimal proposal or raise
         first_file = next(iter(files.keys()), "unknown")
         raise ValueError(

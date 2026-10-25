@@ -18,21 +18,38 @@ def run_agent(repo_dir: str = None, auto_approve: bool = False, provider: str = 
         repo_dir = "." if pathlib.Path("calculator.py").exists() else "./demo_project"
     repo_path = pathlib.Path(repo_dir).resolve()
 
-    if not (repo_path / ".git").exists() and not (pathlib.Path(".git").exists()):
+    def has_git(p: pathlib.Path) -> bool:
+        curr = p.resolve()
+        while curr != curr.parent:
+            if (curr / ".git").exists():
+                return True
+            curr = curr.parent
+        return False
+
+    if not has_git(repo_path):
         run_demo(provider=provider, api_key=api_key)
         return
 
-    # Use test_calculator.py if present in target directory
-    if (repo_path / "test_calculator.py").exists():
+    is_vite_project = (repo_path / "package.json").exists() and not (repo_path / "calculator.py").exists()
+
+    if is_vite_project:
+        target_file = repo_path / "package.json"
+        task = "Fix dependency issue in package.json"
+        test_command = "node test.js" if (repo_path / "test.js").exists() else "npm test"
+    elif (repo_path / "test_calculator.py").exists():
+        target_file = repo_path / "calculator.py"
+        task = "Fix addition calculation bug in calculator.py"
         test_command = "python -m unittest test_calculator.py -v"
     else:
+        target_file = repo_path / "calculator.py"
+        task = "Fix defect and pass tests"
         test_command = "python -m unittest discover -v"
 
     print("=" * 60)
     print("🚀 Loop Engineering AI - Repository Repair Engine")
     print("=" * 60)
     print(f"📁 Target Repository: {repo_path}")
-    print(f"📄 Target File to Repair: {repo_path / 'calculator.py'}")
+    print(f"📄 Target File to Repair: {target_file}")
     print(f"🧪 Test Command: {test_command}")
 
     use_gemini = (provider == "gemini") or bool(api_key) or bool(os.environ.get("GEMINI_API_KEY"))
@@ -61,7 +78,7 @@ def run_agent(repo_dir: str = None, auto_approve: bool = False, provider: str = 
 
     controller = RepairLoopController(
         repo_path=repo_path,
-        task="Fix addition calculation bug in calculator.py",
+        task=task,
         test_command=test_command,
         max_attempts=3,
         auto_approve=auto_approve,

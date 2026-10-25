@@ -101,7 +101,7 @@ class PatchApplier:
 
     def get_git_diff(self, paths: Optional[List[str]] = None) -> str:
         """Retrieves actual git diff from repository."""
-        cmd = ["git", "diff", "--no-color"]
+        cmd = ["git", "--no-pager", "diff", "--no-color"]
         if paths:
             cmd.extend(["--"] + paths)
 

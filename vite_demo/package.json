@@ -1,0 +1,17 @@
+{
+  "name": "vite-autonomous-demo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "canvas-confetti": "MISSING"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

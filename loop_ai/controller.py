@@ -260,7 +260,7 @@ class RepairLoopController:
                     print(current_diff.strip())
                     print("-" * 60)
                 print("• Git Status: Modified & Uncommitted (No direct git commit created)")
-                print("• In-Editor Inspection: Open calculator.py to view live updated code")
+                print(f"• In-Editor Inspection: Open {mod_files} to view live updated code")
                 print("• Terminal Inspection : Run 'git diff' to review changes")
                 print("• Validation Tests    : 100% Passing (exit code 0)")
                 print("• Audit Trail         : loop-audit.jsonl")

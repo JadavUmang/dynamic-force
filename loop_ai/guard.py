@@ -57,9 +57,23 @@ class RepositoryGuard:
 
         git_dir = repo_path / ".git"
         if not git_dir.exists():
-            raise RepositoryGuardError(
-                f"Repository guard failed: '{repo_path}' is not a Git repository (missing .git)."
-            )
+            # Check if repo_path is within a Git repository working tree
+            try:
+                res = subprocess.run(
+                    ["git", "rev-parse", "--is-inside-work-tree"],
+                    cwd=repo_path,
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if res.returncode != 0 or res.stdout.strip() != "true":
+                    raise RepositoryGuardError(
+                        f"Repository guard failed: '{repo_path}' is not a Git repository (missing .git)."
+                    )
+            except Exception as e:
+                raise RepositoryGuardError(
+                    f"Repository guard failed: '{repo_path}' is not a Git repository (missing .git)."
+                ) from e
 
     AGENT_OUTPUT_FILES = {
         "loop-audit.jsonl",
