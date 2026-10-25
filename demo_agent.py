@@ -1,7 +1,7 @@
 """
 Loop Engineering AI Demonstrator
 Runs a guarded repair loop against a real Git repository so all changes,
-commits, and test verifications reflect directly in Git and GitHub.
+commits, and test verifications reflect directly in Git and in the live editor.
 """
 
 import argparse
@@ -13,18 +13,27 @@ from loop_ai.planner import LLMPlanner, DeterministicDemoPlanner
 from loop_ai.cli import run_demo
 
 
-def run_agent(repo_dir: str = "./demo_project", auto_approve: bool = False, provider: str = None, api_key: str = None):
+def run_agent(repo_dir: str = None, auto_approve: bool = False, provider: str = None, api_key: str = None):
+    if repo_dir is None:
+        repo_dir = "." if pathlib.Path("calculator.py").exists() else "./demo_project"
     repo_path = pathlib.Path(repo_dir).resolve()
-    if not (repo_path / ".git").exists():
-        # Fallback to isolated demo if demo_project doesn't exist
+
+    if not (repo_path / ".git").exists() and not (pathlib.Path(".git").exists()):
         run_demo(provider=provider, api_key=api_key)
         return
+
+    # Use test_calculator.py if present in target directory
+    if (repo_path / "test_calculator.py").exists():
+        test_command = "python -m unittest test_calculator.py -v"
+    else:
+        test_command = "python -m unittest discover -v"
 
     print("=" * 60)
     print("🚀 Loop Engineering AI - Repository Repair Engine")
     print("=" * 60)
     print(f"📁 Target Repository: {repo_path}")
-    print(f"🎯 Target Branch: git HEAD")
+    print(f"📄 Target File to Repair: {repo_path / 'calculator.py'}")
+    print(f"🧪 Test Command: {test_command}")
 
     use_gemini = (provider == "gemini") or bool(api_key) or bool(os.environ.get("GEMINI_API_KEY"))
     if use_gemini:
@@ -53,7 +62,7 @@ def run_agent(repo_dir: str = "./demo_project", auto_approve: bool = False, prov
     controller = RepairLoopController(
         repo_path=repo_path,
         task="Fix addition calculation bug in calculator.py",
-        test_command="python -m unittest discover -v",
+        test_command=test_command,
         max_attempts=3,
         auto_approve=auto_approve,
         allow_dirty=True,
@@ -71,7 +80,7 @@ def run_agent(repo_dir: str = "./demo_project", auto_approve: bool = False, prov
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Loop Engineering AI Demonstrator")
-    parser.add_argument("--repo", default="./demo_project", help="Target repository (default: ./demo_project)")
+    parser.add_argument("--repo", default=None, help="Target repository (default: current workspace if calculator.py exists)")
     parser.add_argument("--auto-approve", action="store_true", help="Auto approve patch")
     parser.add_argument("--provider", choices=["gemini", "offline"], default=None, help="Planner provider")
     parser.add_argument("--api-key", default=None, help="Gemini API Key")

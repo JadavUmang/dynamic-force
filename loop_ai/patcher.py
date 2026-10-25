@@ -82,7 +82,9 @@ class PatchApplier:
                 target = self.repo_root / change.path
                 orig = self._backups[target]
                 updated = orig.replace(change.old, change.new, 1)
+                print(f"📝 [REAL-TIME EDIT] Writing patch to: {change.path}")
                 target.write_text(updated, encoding="utf-8")
+                print(f"💾 [SAVED ON DISK] {change.path} updated successfully in real time!")
         except Exception as e:
             # Atomic rollback on any write failure
             self.rollback()

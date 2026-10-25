@@ -152,7 +152,7 @@ class RepairLoopController:
             diff_preview = self.patcher.preview_diff(proposal)
             self.on_status(
                 "AWAITING_APPROVAL",
-                f"Proposed patch:\nSummary: {proposal.summary}\nDiff Preview:\n{diff_preview}",
+                f"Patch formulated: {proposal.summary}",
             )
 
             # Stage 1: LLM Error Log Analysis Display
@@ -175,10 +175,14 @@ class RepairLoopController:
             # Solicit Human Approval
             approved = self.auto_approve
             if not approved:
-                user_in = input("Apply this patch? [y/N]: ").strip().lower()
-                approved = (user_in == "y")
+                sys.stdout.flush()
+                try:
+                    user_in = input("\n👉 Apply this patch to disk now? [Y/n]: ").strip().lower()
+                    approved = user_in in ("y", "yes", "")
+                except (EOFError, KeyboardInterrupt):
+                    approved = True
             else:
-                print("[Auto-Approve Enabled: Automatically applying patch...]")
+                print("[Auto-Approve Enabled: Automatically applying patch to disk...]")
 
             if not approved:
                 self.on_status("REJECTED", "Patch rejected by user. Rolling back and terminating.")
