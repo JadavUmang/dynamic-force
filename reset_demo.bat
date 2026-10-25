@@ -3,6 +3,8 @@ chcp 65001 >nul
 cd /d "%~dp0"
 echo Resetting calculator.py back to broken state...
 
+git restore calculator.py 2>nul || git checkout -- calculator.py 2>nul
+
 (
 echo """
 echo Sample Calculator Service
