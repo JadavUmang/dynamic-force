@@ -169,6 +169,15 @@ class RepairLoopController:
             print("=" * 60)
             print(f"Summary: {proposal.summary}")
             print("-" * 60)
+            print("📄 File Modifications:")
+            for change in proposal.changes:
+                print(f"  • Target File: {change.path}")
+                for old_l in change.old.strip().splitlines():
+                    print(f"    [-] BEFORE: {old_l}")
+                for new_l in change.new.strip().splitlines():
+                    print(f"    [+] AFTER : {new_l}")
+            print("-" * 60)
+            print("Unified Diff:")
             print(diff_preview.strip() if diff_preview else "No diff")
             print("=" * 60)
 
@@ -229,25 +238,33 @@ class RepairLoopController:
                 final_status = "PASSED"
                 final_diff = current_diff
 
-                # Commit changes to Git & Push to GitHub if remote exists
-                commit_info = self.patcher.commit_repair(summary=proposal.summary)
-                pushed_url = self.patcher.push_repair()
-
                 # Stage 3: Coding AI Agent Resolution & Change Summary
                 mod_files = ", ".join(c.path for c in proposal.changes) or "repository files"
                 print("\n" + "=" * 60)
                 print("📊 [STAGE 3] CODING AI AGENT - RESOLUTION & CHANGE SUMMARY")
                 print("=" * 60)
-                print(f"• Outcome: ✅ PASSED (Repair Verified)")
-                print(f"• Files Modified: {mod_files}")
+                print("• Outcome: ✅ PASSED (Repair Verified & Tests Passing)")
+                print(f"• File Modified: {mod_files} (Saved directly to disk in real-time)")
                 print(f"• Change Summary: {proposal.summary}")
-                if commit_info:
-                    print(f"• Git Commit Created: {commit_info}")
-                    print("• Commit Author: Umang Jadav <jadavumang160@gmail.com>")
-                if pushed_url:
-                    print(f"• GitHub Synchronized: Pushed live to {pushed_url}")
-                print(f"• Validation Tests: 100% Passing (exit code 0)")
-                print(f"• Comprehensive Report: loop-report.md")
+                print("-" * 60)
+                print("📄 Changes Applied to File:")
+                for change in proposal.changes:
+                    print(f"  • File: {change.path}")
+                    for old_l in change.old.strip().splitlines():
+                        print(f"    [-] BEFORE (Defect) : {old_l}")
+                    for new_l in change.new.strip().splitlines():
+                        print(f"    [+] AFTER  (Fixed)  : {new_l}")
+                print("-" * 60)
+                if current_diff:
+                    print("🔍 Git Working Tree Diff (Uncommitted):")
+                    print(current_diff.strip())
+                    print("-" * 60)
+                print("• Git Status: Modified & Uncommitted (No direct git commit created)")
+                print("• In-Editor Inspection: Open calculator.py to view live updated code")
+                print("• Terminal Inspection : Run 'git diff' to review changes")
+                print("• Validation Tests    : 100% Passing (exit code 0)")
+                print("• Audit Trail         : loop-audit.jsonl")
+                print("• Comprehensive Report: loop-report.md")
                 print("=" * 60 + "\n")
 
                 self._log_audit(

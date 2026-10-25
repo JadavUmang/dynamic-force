@@ -1,7 +1,7 @@
 """
 Loop Engineering AI Demonstrator
-Runs a guarded repair loop against a real Git repository so all changes,
-commits, and test verifications reflect directly in Git and in the live editor.
+Runs a guarded repair loop against a real Git repository so all changes
+reflect directly in the file and live editor without directly committing.
 """
 
 import argparse
