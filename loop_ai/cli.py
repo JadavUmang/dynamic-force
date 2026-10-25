@@ -6,6 +6,7 @@ import pathlib
 import sys
 import tempfile
 import subprocess
+from typing import Optional
 from loop_ai.controller import RepairLoopController
 from loop_ai.planner import LLMPlanner, DeterministicDemoPlanner
 from loop_ai.executor import CommandExecutor
@@ -45,11 +46,13 @@ def run_demo(provider: Optional[str] = None, api_key: Optional[str] = None):
         )
         (repo / "test_calculator.py").write_text(test_code, encoding="utf-8")
 
-        # Initialize git repo
+        # Initialize git repo with same user configuration
+        author_name = subprocess.run(["git", "config", "user.name"], capture_output=True, text=True).stdout.strip() or "Umang Jadav"
+        author_email = subprocess.run(["git", "config", "user.email"], capture_output=True, text=True).stdout.strip() or "jadavumang160@gmail.com"
         subprocess.run(["git", "init"], cwd=repo, capture_output=True, check=True)
         subprocess.run(["git", "add", "."], cwd=repo, capture_output=True, check=True)
         subprocess.run(
-            ["git", "-c", "user.name=Demo", "-c", "user.email=demo@loop.ai", "commit", "-m", "Initial broken calculator"],
+            ["git", "-c", f"user.name={author_name}", "-c", f"user.email={author_email}", "commit", "-m", "Initial broken calculator"],
             cwd=repo,
             capture_output=True,
             check=True,
